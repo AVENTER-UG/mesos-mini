@@ -1,0 +1,19 @@
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network.target firewalld.service
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/docker/env
+ExecStart=/usr/local/bin/dockerd --cgroup-parent=${CGROUP_PARENT}
+ExecReload=/bin/kill -s HUP $MAINPID
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TimeoutStartSec=0
+Delegate=yes
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

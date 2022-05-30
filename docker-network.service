@@ -1,0 +1,12 @@
+[Unit]
+Description=Create Docker Network
+After=docker.target
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/usr/bin/docker-network.sh
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
