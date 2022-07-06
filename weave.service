@@ -1,0 +1,15 @@
+[Unit]
+Description=Weave Net
+Documentation=http://docs.weave.works/
+After=docker.service
+Requires=docker.service
+[Service]
+Restart=always
+TimeoutStartSec=0
+EnvironmentFile=-/etc/weave.env
+EnvironmentFile=-/etc/weave.%H.env
+ExecStartPre=/usr/local/bin/weave launch --rewrite-inspect --ipalloc-range 10.40.0.0/24  --no-restart $WEAVE_PEERS
+ExecStart=/usr/bin/docker attach weave
+ExecStop=/usr/local/bin/weave stop
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,7 @@
 FROM debian:11
 
-RUN apt update && apt install -y iptables iproute2 systemd wget curl procps
+RUN apt update && apt install -y iptables iproute2 systemd wget curl procps containernetworking-plugins
+RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 
 # Prepare systemd environment.
 ENV container docker
@@ -50,6 +51,7 @@ COPY docker.service /usr/lib/systemd/system/docker.service
 COPY docker_daemon.json /etc/docker/daemon.json
 COPY docker-network.sh /usr/bin/docker-network.sh
 COPY docker-network.service /etc/systemd/system/docker-network.service
+#COPY weave.service /etc/systemd/system/weave.service
 
 # Prepare Mesos environment.
 RUN chmod +x /usr/bin/mesos-init-wrapper && \
@@ -59,22 +61,21 @@ RUN chmod +x /usr/bin/mesos-init-wrapper && \
     mkdir -p /etc/mesos/cni && \
     mkdir -p /usr/libexec/mesos/cni && \
     echo "zk://localhost:2181/mesos" > /etc/mesos/zk && \
-    echo "server.0=localhost:2888:3888" >> /etc/zookeeper/conf/zoo.cfg 
+    echo "server.0=localhost:2888:3888" >> /etc/zookeeper/conf/zoo.cfg && \
+    echo "admin.enableServer=false" >> /etc/zookeeper/conf/zoo.cfg
 
 COPY mesos/master_environment /etc/default/mesos-master
 COPY mesos/agent_environment /etc/default/mesos-agent
 COPY mesos/modules /etc/mesos/modules
 
-# Prepare CNI environment.
-ARG CNI_PLUGINS_URL=https://github.com/containernetworking/plugins/releases/download/v0.7.4/cni-plugins-amd64-v0.7.4.tgz
-
-RUN curl -sL $CNI_PLUGINS_URL -o /cni-plugins.tgz && \
-    tar xzvf /cni-plugins.tgz -C /usr/libexec/mesos/cni && \
-    rm -f /cni-plugins.tgz
 
 COPY mesos/ucr-default-bridge.json /etc/mesos/cni/
 
-RUN systemctl enable docker zookeeper mesos-slave mesos-master docker-network
+RUN curl -L git.io/weave -o /usr/local/bin/weave
+RUN chmod a+x /usr/local/bin/weave
+COPY weave.service /usr/lib/systemd/system/weave.service
+
+RUN systemctl enable docker zookeeper mesos-slave mesos-master docker-network 
 
 # Prepare entrypoint.
 COPY entrypoint.sh /
