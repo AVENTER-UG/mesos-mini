@@ -1,6 +1,12 @@
 FROM debian:11
 
-RUN apt update && apt install -y iptables iproute2 systemd wget curl procps containernetworking-plugins
+LABEL maintainer="Andreas Peters <support@aventer.biz>"
+LABEL org.opencontainers.image.title="mesos-mini" 
+LABEL org.opencontainers.image.description="A mini instance of Apache Mesos/ClusterD"
+LABEL org.opencontainers.image.vendor="AVENTER UG (haftungsbeschränkt)"
+LABEL org.opencontainers.image.source="https://github.com/AVENTER-UG/mesos-mini"
+
+RUN apt update && apt install -y iptables iproute2 systemd wget curl procps 
 RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 
 # Prepare systemd environment.
@@ -30,21 +36,25 @@ RUN for service in\
     ; do systemctl mask $service; done
 
 # Prepare Docker environment.
-ARG DOCKER_URL=https://download.docker.com/linux/static/stable/x86_64/docker-20.10.15.tgz
-#ARG MESOS_URL=http://rpm.aventer.biz/AlmaLinux/8/x86_64/mesos-1.11.1-0.1.el8.x86_64.rpm
+ARG DOCKER_URL=https://download.docker.com/linux/static/stable/${MARCH}/docker-20.10.15.tgz
 
-#RUN curl -s $MESOS_URL -o /mesos.rpm && \
-RUN wget -O /mesos.deb http://rpm.aventer.biz/Debian/pool/main/a/aventer-mesos/aventer-mesos_1.11.0-0.2.0.debian11_amd64.deb
-RUN wget -O /zookeeper.deb http://rpm.aventer.biz/Debian/pool/main/z/zookeeper/zookeeper_3.8.0-0.1_amd64.deb
-RUN apt install -y /mesos.deb /zookeeper.deb
+RUN export ARCH=`dpkg --print-architecture` && \
+    export MARCH=`uname -m` && \
+    echo $ARCH && \
+    echo $MARCH && \
+    wget -O /mesos.deb http://rpm.aventer.biz/Debian/pool/main/a/aventer-mesos/aventer-mesos_1.11.0-0.2.0.debian11_${ARCH}.deb && \
+    wget -O /zookeeper.deb http://rpm.aventer.biz/Debian/pool/main/z/zookeeper/zookeeper_3.8.1-0.1_${ARCH}.deb && \
+    wget -O /docker.tgz https://download.docker.com/linux/static/stable/${MARCH}/docker-20.10.15.tgz && \
+    wget -O /cni.tgz https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-${ARCH}-v1.1.1.tgz && \
+    apt install -y /mesos.deb /zookeeper.deb && \
+    rm /mesos.deb /zookeeper.deb
+
 
 RUN mkdir -p /etc/docker && \
     touch /etc/docker/env && \
-    curl -s $DOCKER_URL -o /docker.tgz && \
     tar -xzvf /docker.tgz -C /usr/local/bin --strip 1 && \
-    rm -f /docker.tgz
-
-RUN groupadd docker
+    rm -rf /docker.tgz && \
+    groupadd docker
 
 COPY docker.service /usr/lib/systemd/system/docker.service
 #COPY docker_env.sh /etc/docker/env.sh
@@ -60,6 +70,8 @@ RUN chmod +x /usr/bin/mesos-init-wrapper && \
     mkdir -p /etc/mesos/resource_providers && \
     mkdir -p /etc/mesos/cni && \
     mkdir -p /usr/libexec/mesos/cni && \
+    mkdir -p /etc/cni/conf.d/ && \
+    mkdir -p /opt/cni/bin && \
     echo "zk://localhost:2181/mesos" > /etc/mesos/zk && \
     echo "server.0=localhost:2888:3888" >> /etc/zookeeper/conf/zoo.cfg && \
     echo "admin.enableServer=false" >> /etc/zookeeper/conf/zoo.cfg
@@ -68,12 +80,15 @@ COPY mesos/master_environment /etc/default/mesos-master
 COPY mesos/agent_environment /etc/default/mesos-agent
 COPY mesos/modules /etc/mesos/modules
 
+RUN tar -xvf /cni.tgz --directory /opt/cni/bin/ && \
+    rm /cni.tgz
 
 COPY mesos/ucr-default-bridge.json /etc/mesos/cni/
 
 RUN curl -L git.io/weave -o /usr/local/bin/weave
 RUN chmod a+x /usr/local/bin/weave
 COPY weave.service /usr/lib/systemd/system/weave.service
+
 
 RUN systemctl enable docker zookeeper mesos-slave mesos-master docker-network 
 
