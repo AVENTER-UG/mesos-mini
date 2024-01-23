@@ -15,7 +15,7 @@ endif
 
 
 build:
-	docker build -t avhost/mesos-mini:latest -f Dockerfile .
+	docker build -t avhost/mesos-mini:latest --no-cache -f Dockerfile .
 
 push:
 	@echo ">>>> Publish docker image: " ${BRANCH}

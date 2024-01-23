@@ -5,3 +5,4 @@ MESOS_HOSTNAME=localhost
 MESOS_WORK_DIR=/var/lib/mesos/master
 MESOS_ZK=file:///etc/mesos/zk
 MESOS_WEBUI_DIR=/usr/share/mesos/webui
+MESOS_QUORUM=1

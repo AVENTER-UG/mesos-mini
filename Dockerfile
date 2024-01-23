@@ -1,4 +1,4 @@
-FROM debian:11
+FROM ubuntu:jammy
 
 LABEL maintainer="Andreas Peters <support@aventer.biz>"
 LABEL org.opencontainers.image.title="mesos-mini" 
@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.description="A mini instance of Apache Mesos/Clus
 LABEL org.opencontainers.image.vendor="AVENTER UG (haftungsbeschränkt)"
 LABEL org.opencontainers.image.source="https://github.com/AVENTER-UG/mesos-mini"
 
-RUN apt update && apt install -y iptables iproute2 systemd wget curl procps 
+RUN apt update && apt install -y iptables iproute2 systemd wget curl procps openjdk-11-jre
 RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 
 # Prepare systemd environment.
@@ -42,8 +42,8 @@ RUN export ARCH=`dpkg --print-architecture` && \
     export MARCH=`uname -m` && \
     echo $ARCH && \
     echo $MARCH && \
-    wget -O /mesos.deb http://rpm.aventer.biz/Debian/pool/main/a/aventer-mesos/aventer-mesos_1.11.0-0.2.0.debian11_${ARCH}.deb && \
-    wget -O /zookeeper.deb http://rpm.aventer.biz/Debian/pool/main/z/zookeeper/zookeeper_3.8.1-0.1_${ARCH}.deb && \
+    wget -O /mesos.deb http://rpm.aventer.biz/Ubuntu/jammy/pool/main/a/aventer-mesos/aventer-mesos_1.11.0-0.4.0_${ARCH}.deb && \
+    wget -O /zookeeper.deb http://rpm.aventer.biz/Ubuntu/jammy/pool/main/z/zookeeper/zookeeper_3.8.1-0.1_${ARCH}.deb && \
     wget -O /docker.tgz https://download.docker.com/linux/static/stable/${MARCH}/docker-20.10.15.tgz && \
     wget -O /cni.tgz https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-${ARCH}-v1.1.1.tgz && \
     apt install -y /mesos.deb /zookeeper.deb && \
@@ -66,7 +66,7 @@ COPY docker-network.service /etc/systemd/system/docker-network.service
 # Prepare Mesos environment.
 RUN chmod +x /usr/bin/mesos-init-wrapper && \
     rm -f /etc/mesos-master/work_dir && \
-    rm -rf /etc/mesos-slave* && \
+    rm -rf /etc/mesos-agent* && \
     mkdir -p /etc/mesos/resource_providers && \
     mkdir -p /etc/mesos/cni && \
     mkdir -p /usr/libexec/mesos/cni && \
@@ -90,7 +90,8 @@ RUN chmod a+x /usr/local/bin/weave
 COPY weave.service /usr/lib/systemd/system/weave.service
 
 
-RUN systemctl enable docker zookeeper mesos-slave mesos-master docker-network 
+RUN systemctl enable docker zookeeper mesos-agent mesos-master docker-network 
+RUN apt update && apt install -y libunwind8 libapr1 libsvn1 libevent-core-2.1-7 libevent-pthreads-2.1-7 libevent-openssl-2.1-7 
 
 # Prepare entrypoint.
 COPY entrypoint.sh /
