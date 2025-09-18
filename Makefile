@@ -8,10 +8,10 @@ build:
 
 push:
 	@echo ">>>> Publish docker image: " ${BRANCH}
-	-docker buildx create --use --name buildkitd
+	-docker buildx create --use --name buildkit
 	@docker buildx build --sbom=true --provenance=true --push  --platform linux/amd64,linux/arm64  -t avhost/mesos-mini:${BRANCH} -f Dockerfile .
 	@docker buildx build --sbom=true --provenance=true --push  --platform linux/amd64,linux/arm64  -t avhost/mesos-mini:latest -f Dockerfile .
-	-docker buildx rm buildkitd
+	-docker buildx rm buildkit
 
 seccheck:
 	grype --add-cpes-if-none .

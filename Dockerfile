@@ -36,16 +36,14 @@ RUN for service in\
     ; do systemctl mask $service; done
 
 # Prepare Docker environment.
-ARG DOCKER_URL=https://download.docker.com/linux/static/stable/${MARCH}/docker-20.10.15.tgz
-
 RUN export ARCH=`dpkg --print-architecture` && \
     export MARCH=`uname -m` && \
     echo $ARCH && \
     echo $MARCH && \
     wget -O /mesos.deb http://rpm.aventer.biz/Ubuntu/noble/pool/main/a/aventer-mesos/aventer-mesos_1.11.0-0.7.1.ubuntu2404_${ARCH}.deb && \
     wget -O /zookeeper.deb http://rpm.aventer.biz/Ubuntu/noble/pool/main/z/zookeeper/zookeeper_3.9.4-0.1_${ARCH}.deb && \
-    wget -O /docker.tgz https://download.docker.com/linux/static/stable/${MARCH}/docker-20.10.15.tgz && \
-    wget -O /cni.tgz https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-${ARCH}-v1.1.1.tgz && \
+    wget -O /docker.tgz https://download.docker.com/linux/static/stable/${MARCH}/docker-28.4.0.tgz && \
+    wget -O /cni.tgz https://github.com/containernetworking/plugins/releases/download/v1.8.0/cni-plugins-linux-${ARCH}-v1.8.0.tgz && \
     apt install -y /mesos.deb /zookeeper.deb && \
     rm /mesos.deb /zookeeper.deb
 
