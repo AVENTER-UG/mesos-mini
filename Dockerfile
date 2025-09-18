@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 LABEL maintainer="Andreas Peters <support@aventer.biz>"
 LABEL org.opencontainers.image.title="mesos-mini" 
@@ -10,7 +10,7 @@ RUN apt update && apt install -y iptables iproute2 systemd wget curl procps open
 RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 
 # Prepare systemd environment.
-ENV container docker
+ENV container=docker
 
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
     rm -f /lib/systemd/system/multi-user.target.wants/*; \
@@ -42,8 +42,8 @@ RUN export ARCH=`dpkg --print-architecture` && \
     export MARCH=`uname -m` && \
     echo $ARCH && \
     echo $MARCH && \
-    wget -O /mesos.deb http://rpm.aventer.biz/Ubuntu/jammy/pool/main/a/aventer-mesos/aventer-mesos_1.11.0-0.4.0_${ARCH}.deb && \
-    wget -O /zookeeper.deb http://rpm.aventer.biz/Ubuntu/jammy/pool/main/z/zookeeper/zookeeper_3.8.1-0.1_${ARCH}.deb && \
+    wget -O /mesos.deb http://rpm.aventer.biz/Ubuntu/noble/pool/main/a/aventer-mesos/aventer-mesos_1.11.0-0.7.1.ubuntu2404_${ARCH}.deb && \
+    wget -O /zookeeper.deb http://rpm.aventer.biz/Ubuntu/noble/pool/main/z/zookeeper/zookeeper_3.9.4-0.1_${ARCH}.deb && \
     wget -O /docker.tgz https://download.docker.com/linux/static/stable/${MARCH}/docker-20.10.15.tgz && \
     wget -O /cni.tgz https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-${ARCH}-v1.1.1.tgz && \
     apt install -y /mesos.deb /zookeeper.deb && \
@@ -85,13 +85,13 @@ RUN tar -xvf /cni.tgz --directory /opt/cni/bin/ && \
 
 COPY mesos/ucr-default-bridge.json /etc/mesos/cni/
 
-RUN curl -L git.io/weave -o /usr/local/bin/weave
+RUN curl -L https://raw.githubusercontent.com/AVENTER-UG/weave/refs/heads/master/weave -o /usr/local/bin/weave
 RUN chmod a+x /usr/local/bin/weave
 COPY weave.service /usr/lib/systemd/system/weave.service
 
 
 RUN systemctl enable docker zookeeper mesos-agent mesos-master docker-network 
-RUN apt update && apt install -y libunwind8 libapr1 libsvn1 libevent-core-2.1-7 libevent-pthreads-2.1-7 libevent-openssl-2.1-7 
+RUN apt update && apt install -y libunwind8
 
 # Prepare entrypoint.
 COPY entrypoint.sh /

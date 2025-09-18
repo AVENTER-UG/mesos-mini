@@ -4,7 +4,7 @@ This repository will build a mesos-mini docker image to run Apache Mesos for dev
 
 ## How to use
 
-To use the container, use the following command (works on both Mac and Linux, does work under windows only with a systemd workaround)
+To use the container, use the following command (works on both Mac and Linux, does work under windows only with a systemd workaround).
 
 ```bash
 docker run --rm --name mesos --privileged=true -p 5050:5050 -p 5051:5051 -it avhost/mesos-mini:1.11.x /lib/systemd/systemd
@@ -13,7 +13,7 @@ docker run --rm --name mesos --privileged=true -p 5050:5050 -p 5051:5051 -it avh
 or
 
 ```bash
-docker run  --rm --name mesos --privileged=true --net host -it avhost/mesos-mini:1.11.x /lib/systemd/systemd
+docker run  --rm --name mesos --privileged=true --net host -it avhost/mesos-mini:latest /lib/systemd/systemd
 ```
 
 These mesos-mini have a configured docker overlay network called "mini" with the subnet "10.32.0.0/24".
