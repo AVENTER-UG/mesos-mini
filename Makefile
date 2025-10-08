@@ -1,10 +1,10 @@
-TAG=v1.11.0-0.7.1
+TAG=v1.11.0-0.8.0
 BRANCH=${TAG}
 LASTCOMMIT=$(shell git log -1 --pretty=short | tail -n 1 | tr -d " " | tr -d "UPDATE:")
 
 
 build:
-	docker build -t avhost/mesos-mini:latest --no-cache -f Dockerfile .
+	docker buildx build --progress=plain --load -t avhost/mesos-mini:latest --no-cache -f Dockerfile .
 
 push:
 	@echo ">>>> Publish docker image: " ${BRANCH}
@@ -17,6 +17,6 @@ seccheck:
 	grype --add-cpes-if-none .
 
 imagecheck:
-	grype --add-cpes-if-none ${IMAGEFULLNAME}:latest > cve-report.md
+	grype --add-cpes-if-none avhost/mesos-mini:latest > cve-report.md
 
 all: build seccheck build imagecheck
